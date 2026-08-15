@@ -32,7 +32,12 @@ jobs:
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          tags=['<script src="energy-upgrade.js"></script>','<script src="ledger-excel-upgrade.js"></script>','<script src="ledger-mapping-upgrade.js"></script>']
+          tags=[
+              '<script src="energy-upgrade.js"></script>',
+              '<script src="ledger-excel-upgrade.js"></script>',
+              '<script src="ledger-mapping-upgrade.js"></script>',
+              '<script src="finance-dashboard-upgrade.js"></script>'
+          ]
           for tag in tags:
               if tag not in s:
                   s=s.replace('</body>', tag+'\n</body>', 1)
