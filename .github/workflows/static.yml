@@ -39,7 +39,8 @@ jobs:
               '<script src="finance-dashboard-upgrade.js"></script>',
               '<script src="shareholders-upgrade.js"></script>',
               '<script src="calculation-transparency.js"></script>',
-              '<script src="homepage-transparency-upgrade.js"></script>'
+              '<script src="homepage-transparency-upgrade.js"></script>',
+              '<script src="universal-transparency-upgrade.js"></script>'
           ]
           for tag in tags:
               if tag not in s:
