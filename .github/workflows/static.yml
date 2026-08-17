@@ -36,7 +36,8 @@ jobs:
               '<script src="energy-upgrade.js"></script>',
               '<script src="ledger-excel-upgrade.js"></script>',
               '<script src="ledger-mapping-upgrade.js"></script>',
-              '<script src="finance-dashboard-upgrade.js"></script>'
+              '<script src="finance-dashboard-upgrade.js"></script>',
+              '<script src="shareholders-upgrade.js"></script>'
           ]
           for tag in tags:
               if tag not in s:
