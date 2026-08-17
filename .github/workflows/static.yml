@@ -42,7 +42,8 @@ jobs:
               '<script src="homepage-transparency-upgrade.js"></script>',
               '<script src="universal-transparency-upgrade.js"></script>',
               '<script src="farm-visuals-upgrade.js"></script>',
-              '<script src="farm-visual-intelligence.js"></script>'
+              '<script src="farm-visual-intelligence.js"></script>',
+              '<script src="farm-map-pro.js"></script>'
           ]
           for tag in tags:
               if tag not in s:
