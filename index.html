@@ -813,7 +813,6 @@ function showTab(id, updateHash=true){
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 (function(){ const id=(location.hash||'').slice(1); showTab(id||'dash',false); })();
 document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('change',()=>{if(['fcStart','fcEnd','fcCostEsc','fcPriceGrowth','fcYieldGrowth','fcOverhead','fcCapex','fcDiscount','fcPurchase','fcPurchaseYear','fcRentBase','fcRentEsc','fcLandMode'].includes(el.id))updateForecastInputs(); else if(['funding','histExpenses','cashBalance','contrib','agriRevenue','capitalBase','annualCF','discount','rentEsc','wellFlow','wellHours','wellDays','solarKW','energyCoverage','scenario','special'].includes(el.id))updateFromInputs()})});
-render();
 </script>
 
 <script>
