@@ -3,7 +3,6 @@ on:
   push:
     paths:
       - 'farm-state-upgrade.js'
-      - 'farm-master-plan.svg'
       - 'farm-site-plan.svg'
       - 'farm-performance-fix.js'
       - '.github/workflows/integrate-farm-upgrade.yml'
@@ -14,16 +13,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Remove legacy inline map image and integrate scripts
+      - name: Apply performance-safe integration to index.html
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
+
+          # 1) Never embed the legacy satellite JPEG as base64 in the HTML.
           pattern=r'(<div class="map-canvas">\s*<img\s+)src="data:image/[^\"]+"'
           s,n=re.subn(pattern, r'\1src="farm-site-plan.svg?v=20260821-2"', s, count=1)
-          print('Replaced inline base64 map image:', n)
+          print('Inline map payload removed:', n)
+
+          # 2) The base application used to render once, then the advanced model
+          # rendered again immediately. Keep the advanced render as the single boot render.
+          boot_pattern=r'(document\.querySelectorAll\(\'input,select,textarea\'\).*?\n)render\(\);\n</script>\n\n<script>\n/\* V6 — محرك دراسة الجدوى الزراعية الفعلية 2026–2048 \*/'
+          replacement=r'\1</script>\n\n<script>\n/* V6 — محرك دراسة الجدوى الزراعية الفعلية 2026–2048 */'
+          s,n2=re.subn(boot_pattern,replacement,s,count=1,flags=re.S)
+          print('Duplicate initial render removed:', n2)
+
           tags=[
             '<script src="farm-state-upgrade.js"></script>',
             '<script src="farm-performance-fix.js"></script>'
@@ -38,5 +47,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m 'perf: remove inline map payload and optimize dashboard'
+          git diff --cached --quiet || git commit -m 'perf: reduce initial render and map payload'
           git push
