@@ -1,7 +1,6 @@
 (()=>{
   const DOC=()=>document;
   function addStyle(){const s=DOC().createElement('style');s.id='farm-clean-map-style';s.textContent=`
-    /* Clean map: one visual layer only */
     #map .map-card-live{position:static!important;transform:none!important;z-index:auto!important}
     #map .map-canvas{position:relative;overflow:hidden;isolation:isolate}
     #map .map-canvas img{position:relative;z-index:1;width:100%;height:auto;min-height:0;object-fit:contain;display:block}
@@ -20,13 +19,16 @@
   function buildPanel(){
     const mapSection=DOC().querySelector('#map');if(!mapSection||mapSection.dataset.liveEnhanced)return;mapSection.dataset.liveEnhanced='1';
     const card=mapSection.querySelector('.card');if(!card)return;
-    /* Remove/hide legacy visual overlays so there is no second map layer. */
     const legacyUI=card.querySelector('.map-ui');if(legacyUI)legacyUI.remove();
     const legacyLegend=card.querySelector('.map-legend');if(legacyLegend)legacyLegend.remove();
     const oldMapNote=card.querySelector('.map-note');if(oldMapNote)oldMapNote.remove();
     const oldCallout=card.querySelector('.callout');if(oldCallout)oldCallout.remove();
     const shell=card.querySelector('.map-shell');if(!shell)return;
     const side=card.querySelector('.map-side');
+    const img=card.querySelector('.map-canvas img');
+    if(img){img.src='farm-site-plan.svg?v=20260821-1';img.alt='مخطط موقع مزرعة تنيدة — الحدود الفعلية بين النقاط 4 و200.1 و200.2 و1';img.removeAttribute('style')}
+    /* Do not render a second map/visual inside خطة الحقول. That page remains data/table driven. */
+    const fieldsDuplicate=DOC().querySelector('#fields .map-shell,#fields .map-canvas,#fields .map-ui,#fields .map-legend');fieldsDuplicate?.remove();
     const s=state();const crops=Array.isArray(s.crops)?s.crops:[];const wheat=crops.find(c=>String(c.name||'').includes('قمح'));const alf=crops.find(c=>String(c.name||'').includes('برسيم'));
     const panel=DOC().createElement('div');panel.className='farm-live-panel map-clean-live';panel.innerHTML=`<h3>بيانات الموقع الحالية — تفاعلية</h3><div class="farm-live-grid">
       <div class="farm-live-item"><label>إجمالي الأرض (فدان)</label><input data-k="totalLand" type="number" value="${s.totalLand||200}"></div>
@@ -38,14 +40,11 @@
       <div class="farm-live-item"><label>الطاقة الشمسية (kW)</label><input data-k="solarKW" type="number" value="${s.solarKW||110}"></div>
       <div class="farm-live-item"><label>كفاية الطاقة (%)</label><input data-k="energyCoverage" type="number" value="${s.energyCoverage||60}"></div>
     </div><div class="farm-live-actions"><button id="farmApply">تحديث حالة الموقع</button><button id="farmReset" class="secondary">إعادة القيم الحالية</button></div><div class="farm-live-summary" id="farmLiveSummary"></div><div class="farm-live-source">مصدر الأرقام: بيانات اللوحة الحالية + المدخلات التفاعلية. التغييرات تحفظ محليًا وتُستخدم في الحسابات المرتبطة.</div>`;
-    /* Critical fix: panel is placed AFTER the map shell, never over the map. */
     card.appendChild(panel);
     function refresh(){const d=state();const total=num(d.totalLand||200),prepared=num(d.preparedLand||140),wa=num(d.wellFlow||200)*num(d.wellHours||7)*365;const cropNeed=(Array.isArray(d.crops)?d.crops:[]).reduce((a,c)=>a+num(c.area)*num(c.water)*(num(c.cycles)||1),0);DOC().getElementById('farmLiveSummary').innerHTML=`<div class="farm-live-kpi"><span>نسبة التجهيز</span><b>${total?Math.round(prepared/total*100):0}%</b></div><div class="farm-live-kpi"><span>إمداد المياه النظري</span><b>${Math.round(wa/1000)} ألف م³</b></div><div class="farm-live-kpi"><span>فجوة المياه</span><b>${money(wa-cropNeed)}</b></div>`}
     panel.querySelectorAll('input').forEach(i=>i.addEventListener('change',()=>{const d=state();d[i.dataset.k]=num(i.value);save(d);refresh()}));
     panel.querySelector('#farmApply').onclick=()=>{const d=state();panel.querySelectorAll('input').forEach(i=>d[i.dataset.k]=num(i.value));if(Array.isArray(d.crops)){const w=d.crops.find(c=>String(c.name||'').includes('قمح'));const a=d.crops.find(c=>String(c.name||'').includes('برسيم'));if(w)w.area=d.wheatArea||w.area;if(a)a.area=d.alfalfaArea||a.area}save(d);syncLegacyMemory(d);refresh();alert('تم تحديث حالة الموقع وحفظها وإعادة ربطها بمحرك الحساب.')};
     panel.querySelector('#farmReset').onclick=()=>{const d=state();panel.querySelectorAll('input').forEach(i=>i.value=d[i.dataset.k]??i.value);refresh()};refresh();
-    const img=card.querySelector('.map-canvas img');if(img){img.src='farm-master-plan.svg?v=57a0c7d';img.alt='مخطط مزرعة تنيدة — الحدود الفعلية بين النقاط 1 و2 و3 و4'}
-    /* Remove legacy map action/coordinate elements that visually competed with the master plan. */
     if(side){side.querySelectorAll('.field-summary').forEach((el,idx)=>{if(idx===0)el.remove()})}
   }
   function run(){addStyle();buildPanel()}
