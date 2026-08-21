@@ -14,12 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inject upgrade and performance scripts into index.html
+      - name: Remove legacy inline map image and integrate scripts
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
+          pattern=r'(<div class="map-canvas">\s*<img\s+)src="data:image/[^\"]+"'
+          s,n=re.subn(pattern, r'\1src="farm-site-plan.svg?v=20260821-2"', s, count=1)
+          print('Replaced inline base64 map image:', n)
           tags=[
             '<script src="farm-state-upgrade.js"></script>',
             '<script src="farm-performance-fix.js"></script>'
@@ -34,5 +38,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m 'chore: integrate farm performance guard'
+          git diff --cached --quiet || git commit -m 'perf: remove inline map payload and optimize dashboard'
           git push
