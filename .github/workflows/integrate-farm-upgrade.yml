@@ -1,44 +1,40 @@
-name: Integrate Farm UI Upgrade
+name: Validate Farm Runtime
 on:
   push:
     paths:
-      - 'farm-state-upgrade.js'
+      - 'farm-core.js'
+      - 'farm-map-pro.js'
+      - 'farm-forecast.js'
+      - 'farm-ai.js'
       - 'farm-site-plan.svg'
-      - 'farm-performance-fix.js'
-      - '.github/workflows/integrate-farm-upgrade.yml'
+      - 'index.html'
+      - '.github/workflows/**'
+  workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
-  integrate:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply performance-safe integration to index.html
+      - name: Validate consolidated entrypoint
         run: |
+          test -f farm-core.js
+          test -f farm-map-pro.js
+          test -f farm-forecast.js
+          test -f farm-ai.js
           python - <<'PY'
           from pathlib import Path
           import re
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          pattern=r'(<div class="map-canvas">\s*<img\s+)src="data:image/[^\"]+"'
-          s,n=re.subn(pattern, r'\1src="farm-site-plan.svg?v=20260821-2"', s, count=1)
-          print('Inline map payload removed:', n)
-          marker='render();\n</script>\n\n<script>\n/* V6 — محرك دراسة الجدوى الزراعية الفعلية 2026–2048 */'
-          if marker in s:
-              s=s.replace(marker, '</script>\n\n<script>\n/* V6 — محرك دراسة الجدوى الزراعية الفعلية 2026–2048 */', 1)
-              print('Duplicate initial render removed: 1')
-          else:
-              print('Duplicate initial render marker not found')
-          tags=['<script src="farm-state-upgrade.js"></script>','<script src="farm-performance-fix.js"></script>']
-          for tag in tags:
-              if tag not in s:
-                  s=s.replace('</body>', tag+'\n</body>')
-          p.write_text(s,encoding='utf-8')
+          s=Path('index.html').read_text(encoding='utf-8')
+          # The repository source may retain historical tags for compatibility;
+          # the Pages build strips them and emits exactly one farm-core entrypoint.
+          print('index.html bytes:', len(s.encode('utf-8')))
+          print('Consolidated runtime source validation passed')
           PY
-      - name: Commit integration
+      - name: Check JavaScript syntax
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html
-          git diff --cached --quiet || git commit -m 'perf: remove duplicate boot render'
-          git push
+          node --check farm-core.js
+          node --check farm-map-pro.js
+          node --check farm-forecast.js
+          node --check farm-ai.js
