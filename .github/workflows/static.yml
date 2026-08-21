@@ -1,4 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Tanida Farm — consolidated GitHub Pages deployment
 name: Deploy static content to Pages
 
 on:
@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -26,30 +26,36 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Inject application modules
+      - name: Build consolidated runtime
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          tags=[
-              '<script src="energy-upgrade.js"></script>',
-              '<script src="ledger-excel-upgrade.js"></script>',
-              '<script src="ledger-mapping-upgrade.js"></script>',
-              '<script src="finance-dashboard-upgrade.js"></script>',
-              '<script src="shareholders-upgrade.js"></script>',
-              '<script src="calculation-transparency.js"></script>',
-              '<script src="homepage-transparency-upgrade.js"></script>',
-              '<script src="universal-transparency-upgrade.js"></script>',
-              '<script src="transparency-popup-upgrade.js"></script>',
-              '<script src="farm-visuals-upgrade.js"></script>',
-              '<script src="farm-visual-intelligence.js"></script>',
-              '<script src="farm-map-pro.js"></script>'
+          modules=[
+            'farm-state-upgrade.js','farm-performance-fix.js','farm-map-pro.js',
+            'farm-visuals-upgrade.js','farm-visual-intelligence.js',
+            'energy-upgrade.js','ledger-excel-upgrade.js','ledger-mapping-upgrade.js',
+            'finance-dashboard-upgrade.js','shareholders-upgrade.js','calculation-transparency.js',
+            'homepage-transparency-upgrade.js','universal-transparency-upgrade.js','transparency-popup-upgrade.js'
           ]
-          for tag in tags:
-              if tag not in s:
-                  s=s.replace('</body>', tag+'\n</body>', 1)
-          p.write_text(s, encoding='utf-8')
+          for name in modules:
+              s=re.sub(r'\\s*<script[^>]+src=["\\']'+re.escape(name)+r'["\\'][^>]*></script>\\s*', '\\n', s, flags=re.I)
+          s=re.sub(r'\\s*<script[^>]+src=["\\']farm-core\\.js[^"\\']*["\\'][^>]*></script>\\s*', '\\n', s, flags=re.I)
+          s=s.replace('</body>', '  <script src="farm-core.js"></script>\\n</body>')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Validate consolidated runtime
+        run: |
+          test -f farm-core.js
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert s.count('farm-core.js') == 1, 'farm-core.js must be loaded exactly once'
+          for legacy in ['farm-state-upgrade.js','farm-performance-fix.js','farm-map-pro.js']:
+              assert legacy not in s, f'legacy external module still injected: {legacy}'
+          print('Consolidated runtime validation passed')
           PY
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
